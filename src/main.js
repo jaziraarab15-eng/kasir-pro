@@ -1,4 +1,6 @@
 import './css/style.css';
+import { initDB } from "./js/db.js";
+import { tambahBarang, semuaBarang } from "./js/barang.js";
 
 document.querySelector('#app').innerHTML = `
 <header class="header">
@@ -67,6 +69,32 @@ Setting
 
 </section>
 
+<section class="card">
+
+<h2>📦 Tambah Barang</h2>
+
+<input id="nama" placeholder="Nama Barang">
+
+<input id="harga" type="number" placeholder="Harga">
+
+<input id="stok" type="number" placeholder="Stok">
+
+<input id="barcode" placeholder="Barcode">
+
+<button id="simpan">
+Simpan Barang
+</button>
+
+</section>
+
+<section class="card">
+
+<h2>Daftar Barang</h2>
+
+<div id="daftarBarang"></div>
+
+</section>
+
 <button class="fab">+</button>
 
 <nav class="bottom">
@@ -79,3 +107,49 @@ Setting
 
 </nav>
 `;
+
+async function tampilkanBarang(){
+
+const data = await semuaBarang();
+
+const daftar = document.getElementById("daftarBarang");
+
+daftar.innerHTML = "";
+
+data.forEach(item=>{
+
+daftar.innerHTML += `
+<div class="box">
+<b>${item.nama}</b><br>
+Rp ${item.harga}<br>
+Stok : ${item.stok}
+</div>
+`;
+
+});
+
+}
+
+initDB().then(()=>{
+
+  tampilkanBarang();
+
+  document.getElementById("simpan").onclick = async()=>{
+
+    const nama = document.getElementById("nama").value;
+    const harga = Number(document.getElementById("harga").value);
+    const stok = Number(document.getElementById("stok").value);
+    const barcode = document.getElementById("barcode").value;
+
+    await tambahBarang({
+      nama,
+      harga,
+      stok,
+      barcode
+    });
+
+    tampilkanBarang();
+
+  };
+
+});

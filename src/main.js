@@ -1,3 +1,3 @@
-import './style.css'
+import './css/style.css';
 
-console.log('Kasir Pro v1');
+console.log("Kasir Pro v1");

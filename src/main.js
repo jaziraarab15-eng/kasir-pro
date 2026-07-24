@@ -1,6 +1,10 @@
 import './css/style.css';
 import { initDB } from "./js/db.js";
-import { tambahBarang, semuaBarang } from "./js/barang.js";
+import {
+  tambahBarang,
+  semuaBarang,
+  updateStok
+} from "./js/barang.js";
 
 let keranjang = [];
 
@@ -353,7 +357,7 @@ initDB().then(async()=>{
 
 });
 
-document.getElementById("btnBayar").onclick=()=>{
+document.getElementById("btnBayar").onclick = async()=>{
 
   if(keranjang.length===0){
 
@@ -369,13 +373,35 @@ document.getElementById("btnBayar").onclick=()=>{
 
   if(confirm(`Total pembayaran Rp ${total}\n\nLanjutkan pembayaran?`)){
 
+const dataBarang = await semuaBarang();
+
+for (const item of keranjang) {
+
+  const barang = dataBarang.find(b => b.nama === item.nama);
+
+  if (barang) {
+
+    await updateStok(
+      barang.id,
+      barang.stok - item.qty
+    );
+
+  }
+
+}
+
     keranjang=[];
 
     tampilkanKeranjang();
 
+  await tampilkanBarang();
+
     alert("✅ Pembayaran berhasil");
 
-  }
+document.getElementById("hasilCari").innerHTML = "";
+document.getElementById("cariBarang").value = "";
+
+document.getElementById("cariBarang").focus();
+}
 
 };
-

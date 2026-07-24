@@ -27,3 +27,30 @@ req.onerror=reject;
 });
 
 }
+
+export function updateStok(id, stokBaru){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readwrite").get(id);
+
+    req.onsuccess = ()=>{
+
+      const data = req.result;
+
+      data.stok = stokBaru;
+
+      const simpan = getStore("readwrite").put(data);
+
+      simpan.onsuccess = resolve;
+
+      simpan.onerror = reject;
+
+    };
+
+    req.onerror = reject;
+
+  });
+
+}
+

@@ -54,3 +54,29 @@ export function updateStok(id, stokBaru){
 
 }
 
+export function simpanTransaksi(data){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readwrite","transaksi").add(data);
+
+    req.onsuccess = resolve;
+
+    req.onerror = reject;
+
+  });
+
+}
+export function semuaTransaksi(){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readonly","transaksi").getAll();
+
+    req.onsuccess = ()=>resolve(req.result);
+
+    req.onerror = reject;
+
+  });
+
+}

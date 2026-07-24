@@ -3,12 +3,14 @@ import { initDB } from "./js/db.js";
 import {
   tambahBarang,
   semuaBarang,
-  updateStok
+  updateStok,
+  simpanTransaksi,
+  semuaTransaksi
 } from "./js/barang.js";
 
 let keranjang = [];
 
-document.querySelector('#app').innerHTML = `
+document.querySelector("#app").innerHTML = `
 <header class="header">
   <h2>👋 Assalamualaikum</h2>
   <h1>Kasir Pro</h1>
@@ -19,22 +21,22 @@ document.querySelector('#app').innerHTML = `
 
 <div class="card">
 <h3>💰 Penjualan</h3>
-<b>Rp 0</b>
+<b id="statPenjualan">Rp 0</b>
 </div>
 
 <div class="card">
 <h3>🧾 Transaksi</h3>
-<b>0</b>
+<b id="statTransaksi">0</b>
 </div>
 
 <div class="card">
 <h3>📦 Barang</h3>
-<b>0</b>
+<b id="statBarang">0</b>
 </div>
 
 <div class="card">
 <h3>📈 Laba</h3>
-<b>Rp 0</b>
+<b id="statLaba">Rp 0</b>
 </div>
 
 </section>
@@ -58,7 +60,7 @@ Barang
 Pelanggan
 </div>
 
-<div class="box">
+<div class="box" id="menuLaporan">
 <span class="material-icons">analytics</span>
 Laporan
 </div>
@@ -75,25 +77,34 @@ Setting
 
 </section>
 
-<section class="card">
+<section class="card" id="halamanLaporan">
+
+<h2>📊 Laporan Penjualan</h2>
+
+<p>Total Transaksi :
+<span id="jumlahTransaksi">0</span></p>
+
+<p>Total Omzet :
+Rp <span id="totalOmzet">0</span></p>
+
+<div id="daftarTransaksi">
+Belum ada transaksi
+</div>
+
+</section>
+
+<section class="card" id="halamanBarang">
 
 <h2>📦 Tambah Barang</h2>
 
 <input id="nama" placeholder="Nama Barang">
-
 <input id="harga" type="number" placeholder="Harga">
-
 <input id="stok" type="number" placeholder="Stok">
-
 <input id="barcode" placeholder="Barcode">
 
 <button id="simpan">
 Simpan Barang
 </button>
-
-</section>
-
-<section class="card" id="halamanBarang">
 
 <h2>Daftar Barang</h2>
 
@@ -105,8 +116,7 @@ Simpan Barang
 
 <h2>🛒 Kasir</h2>
 
-<input
-id="cariBarang"
+<input id="cariBarang"
 placeholder="Cari nama atau barcode">
 
 <div id="hasilCari"></div>
@@ -114,47 +124,48 @@ placeholder="Cari nama atau barcode">
 <h3>Keranjang</h3>
 
 <div id="keranjang">
-
 Belum ada barang
-
 </div>
 
 <h2>Total : Rp <span id="totalBayar">0</span></h2>
 
+<input id="uangBayar"
+type="number"
+placeholder="Uang pelanggan">
+
+<h3>Kembalian :
+Rp <span id="kembalian">0</span></h3>
+
 <button id="btnBayar">
-
 Bayar
-
 </button>
 
 </section>
 
-<button class="fab">+</button>
-
 <button id="fab" class="fab">+</button>
 
 <nav class="bottom">
-
 <button><span class="material-icons">home</span></button>
 <button><span class="material-icons">shopping_cart</span></button>
 <button><span class="material-icons">inventory_2</span></button>
 <button><span class="material-icons">bar_chart</span></button>
 <button><span class="material-icons">settings</span></button>
-
 </nav>
 `;
 
 async function tampilkanBarang(){
 
-const data = await semuaBarang();
+  const data = await semuaBarang();
 
-const daftar = document.getElementById("daftarBarang");
+  document.getElementById("statBarang").innerText = data.length;
 
-daftar.innerHTML = "";
+  const daftar = document.getElementById("daftarBarang");
 
-data.forEach(item=>{
+  daftar.innerHTML = "";
 
-daftar.innerHTML += `
+  data.forEach(item=>{
+
+    daftar.innerHTML += `
 <div class="box">
 <b>${item.nama}</b><br>
 Rp ${item.harga}<br>
@@ -162,26 +173,41 @@ Stok : ${item.stok}
 </div>
 `;
 
-});
+  });
 
 }
 
 async function cariBarang(keyword){
 
-const data = await semuaBarang();
+  const data = await semuaBarang();
 
-const hasil = document.getElementById("hasilCari");
+  const hasil = document.getElementById("hasilCari");
 
-hasil.innerHTML = "";
+  hasil.innerHTML = "";
 
-const filter = data.filter(item =>
-item.nama.toLowerCase().includes(keyword.toLowerCase()) ||
-item.barcode.toLowerCase().includes(keyword.toLowerCase())
-);
+  const filter = data.filter(item=>
 
-filter.forEach(item=>{
+    item.stok > 0 && (
 
-hasil.innerHTML += `
+      item.nama.toLowerCase().includes(keyword.toLowerCase()) ||
+
+      item.barcode.toLowerCase().includes(keyword.toLowerCase())
+
+    )
+
+  );
+
+  if(filter.length===0){
+
+    hasil.innerHTML = "Barang tidak ditemukan";
+
+    return;
+
+  }
+
+  filter.forEach(item=>{
+
+    hasil.innerHTML += `
 <div class="box pilihBarang"
 data-id="${item.id}"
 data-nama="${item.nama}"
@@ -192,52 +218,60 @@ Stok : ${item.stok}
 </div>
 `;
 
-});
+  });
 
-document.querySelectorAll(".pilihBarang").forEach(box=>{
+  document.querySelectorAll(".pilihBarang").forEach(box=>{
 
-  box.onclick=()=>{
+    box.onclick=()=>{
 
-    const nama = box.dataset.nama;
-    const harga = Number(box.dataset.harga);
+      const nama = box.dataset.nama;
+      const harga = Number(box.dataset.harga);
 
-    const ada = keranjang.find(x=>x.nama===nama);
+      const ada = keranjang.find(x=>x.nama===nama);
 
-    if(ada){
+      if(ada){
 
-      ada.qty++;
+        ada.qty++;
 
-    }else{
+      }else{
 
-      keranjang.push({
-        nama,
-        harga,
-        qty:1
-      });
+        keranjang.push({
+          nama,
+          harga,
+          qty:1
+        });
 
-    }
+      }
 
-    tampilkanKeranjang();
+      tampilkanKeranjang();
 
-  };
+    };
 
-});
+  });
 
 }
 
-function tampilkanKeranjang() {
+function tampilkanKeranjang(){
 
-const div = document.getElementById("keranjang");
+  const div = document.getElementById("keranjang");
 
-div.innerHTML = "";
+  let total = 0;
 
-let total = 0;
+  div.innerHTML = "";
 
-keranjang.forEach(item => {
+  keranjang = keranjang.filter(item=>item.qty>0);
 
-total += item.qty * item.harga;
+  if(keranjang.length===0){
 
- div.innerHTML += `
+    div.innerHTML = "Belum ada barang";
+
+  }
+
+  keranjang.forEach(item=>{
+
+    total += item.qty * item.harga;
+
+    div.innerHTML += `
 <div class="box">
 
 <b>${item.nama}</b><br>
@@ -253,155 +287,360 @@ Subtotal : Rp ${item.qty * item.harga}<br><br>
 </div>
 `;
 
-});
+  });
 
-document.querySelectorAll(".minus").forEach(btn=>{
+  document.getElementById("totalBayar").innerText = total;
 
-btn.onclick=()=>{
+  document.querySelectorAll(".minus").forEach(btn=>{
 
-    const item = keranjang.find(x=>x.nama===btn.dataset.nama);
+    btn.onclick=()=>{
 
-    item.qty--;
+      const item = keranjang.find(x=>x.nama===btn.dataset.nama);
 
-    tampilkanKeranjang();
+      if(item){
 
-  };
+        item.qty--;
 
-});
+        tampilkanKeranjang();
 
-document.querySelectorAll(".plus").forEach(btn=>{
+      }
 
-  btn.onclick=()=>{
+    };
 
-    const item=keranjang.find(x=>x.nama===btn.dataset.nama);
+  });
 
-    item.qty++;
+  document.querySelectorAll(".plus").forEach(btn=>{
 
-    tampilkanKeranjang();
+    btn.onclick=()=>{
 
-  };
+      const item = keranjang.find(x=>x.nama===btn.dataset.nama);
 
-});
+      if(item){
 
-keranjang = keranjang.filter(item => item.qty > 0);
+        item.qty++;
 
-if (keranjang.length === 0) {
-  div.innerHTML = "Belum ada barang";
+        tampilkanKeranjang();
+
+      }
+
+    };
+
+  });
+
 }
 
-document.getElementById("totalBayar").innerText = total;
+async function tampilkanLaporan(){
+
+  const data = await semuaTransaksi();
+
+  let omzet = 0;
+
+  document.getElementById("jumlahTransaksi").innerText = data.length;
+
+  const daftar = document.getElementById("daftarTransaksi");
+
+  daftar.innerHTML = "";
+
+  if(data.length===0){
+
+    daftar.innerHTML = "Belum ada transaksi";
+
+  }
+
+  data.forEach(trx=>{
+
+    omzet += trx.total;
+
+    daftar.innerHTML += `
+<div class="box">
+
+<b>${new Date(trx.tanggal).toLocaleString()}</b><br>
+
+Total : Rp ${trx.total}<br>
+
+Bayar : Rp ${trx.bayar}<br>
+
+Kembali : Rp ${trx.kembali}
+
+</div>
+`;
+
+  });
+
+  document.getElementById("totalOmzet").innerText = omzet;
+  document.getElementById("statPenjualan").innerText = "Rp " + omzet;
+  document.getElementById("statTransaksi").innerText = data.length;
 
 }
 
+// Tombol FAB tambah barang
 document.getElementById("fab").onclick = () => {
+
   document
-    .querySelector(".tambah-barang")
-    .scrollIntoView({ behavior: "smooth" });
+  .getElementById("halamanBarang")
+  .scrollIntoView({
+    behavior:"smooth"
+  });
 
   document.getElementById("nama").focus();
-};
-
-document.getElementById("menuKasir").onclick=()=>{
-
-document.getElementById("halamanKasir")
-.scrollIntoView({
-behavior:"smooth"
-});
 
 };
 
-document.getElementById("menuBarang").onclick = () => {
 
-document.getElementById("halamanBarang")
-.scrollIntoView({
-behavior:"smooth"
-});
+// Menu Kasir
+document.getElementById("menuKasir").onclick = ()=>{
+
+  document
+  .getElementById("halamanKasir")
+  .scrollIntoView({
+    behavior:"smooth"
+  });
 
 };
-document.getElementById("cariBarang").oninput=(e)=>{
 
-cariBarang(e.target.value);
+
+// Menu Barang
+document.getElementById("menuBarang").onclick = ()=>{
+
+  document
+  .getElementById("halamanBarang")
+  .scrollIntoView({
+    behavior:"smooth"
+  });
+
+};
+
+
+// Menu Laporan
+document.getElementById("menuLaporan").onclick = async()=>{
+
+  await tampilkanLaporan();
+
+  document
+  .getElementById("halamanLaporan")
+  .scrollIntoView({
+    behavior:"smooth"
+  });
+
+};
+
+
+// Pencarian barang
+document.getElementById("cariBarang").oninput = (e)=>{
+
+  cariBarang(e.target.value);
+
+};
+
+
+// Hitung kembalian
+document.getElementById("uangBayar").oninput = ()=>{
+
+
+  const total = Number(
+    document.getElementById("totalBayar").innerText
+  );
+
+
+  const bayar = Number(
+    document.getElementById("uangBayar").value
+  );
+
+
+  const kembali = bayar - total;
+
+
+  document.getElementById("kembalian").innerText =
+    kembali >= 0 ? kembali : 0;
+
 
 };
 
 initDB().then(async()=>{
 
-  tampilkanBarang();
+
+  await tampilkanBarang();
+
+  await tampilkanLaporan();
+
+
+
+  // Simpan Barang
 
   document.getElementById("simpan").onclick = async()=>{
 
-    const nama = document.getElementById("nama").value;
-    const harga = Number(document.getElementById("harga").value);
-    const stok = Number(document.getElementById("stok").value);
-    const barcode = document.getElementById("barcode").value;
+
+    const nama =
+    document.getElementById("nama").value;
+
+
+    const harga =
+    Number(document.getElementById("harga").value);
+
+
+    const stok =
+    Number(document.getElementById("stok").value);
+
+
+    const barcode =
+    document.getElementById("barcode").value;
+
+
 
     await tambahBarang({
+
       nama,
       harga,
       stok,
       barcode
+
     });
 
-    tampilkanBarang();
 
-    document.getElementById("nama").value = "";
-    document.getElementById("harga").value = "";
-    document.getElementById("stok").value = "";
-    document.getElementById("barcode").value = "";
+
+    await tampilkanBarang();
+
+
+
+    document.getElementById("nama").value="";
+    document.getElementById("harga").value="";
+    document.getElementById("stok").value="";
+    document.getElementById("barcode").value="";
+
 
   };
 
-  document.getElementById("cariBarang").oninput = (e)=>{
-    cariBarang(e.target.value);
-  };
 
-});
 
-document.getElementById("btnBayar").onclick = async()=>{
 
-  if(keranjang.length===0){
+  // Tombol Bayar
 
-    alert("Keranjang masih kosong!");
+  document.getElementById("btnBayar").onclick = async()=>{
 
-    return;
 
-  }
+    if(keranjang.length===0){
 
-  const total=Number(
-    document.getElementById("totalBayar").innerText
-  );
+      alert("Keranjang masih kosong!");
 
-  if(confirm(`Total pembayaran Rp ${total}\n\nLanjutkan pembayaran?`)){
+      return;
 
-const dataBarang = await semuaBarang();
+    }
 
-for (const item of keranjang) {
 
-  const barang = dataBarang.find(b => b.nama === item.nama);
 
-  if (barang) {
+    const total =
+    Number(document.getElementById("totalBayar").innerText);
 
-    await updateStok(
-      barang.id,
-      barang.stok - item.qty
-    );
 
-  }
 
-}
+    const bayar =
+    Number(document.getElementById("uangBayar").value);
+
+
+
+    if(bayar < total){
+
+      alert("❌ Uang pelanggan kurang!");
+
+      return;
+
+    }
+
+
+
+
+    if(!confirm(
+      `Total pembayaran Rp ${total}\n\nLanjutkan pembayaran?`
+    )){
+
+      return;
+
+    }
+
+
+
+    const dataBarang = await semuaBarang();
+
+
+
+    for(const item of keranjang){
+
+
+      const barang =
+      dataBarang.find(
+        b=>b.nama===item.nama
+      );
+
+
+
+      if(barang){
+
+
+        await updateStok(
+
+          barang.id,
+
+          barang.stok - item.qty
+
+        );
+
+
+      }
+
+
+    }
+
+
+
+
+    await simpanTransaksi({
+
+      tanggal:new Date().toISOString(),
+
+      items:[...keranjang],
+
+      total,
+
+      bayar,
+
+      kembali: bayar-total
+
+    });
+
+
+
+
 
     keranjang=[];
 
+
     tampilkanKeranjang();
 
-  await tampilkanBarang();
+
+
+    await tampilkanBarang();
+
+
+    await tampilkanLaporan();
+
+
+
+    document.getElementById("uangBayar").value="";
+
+    document.getElementById("kembalian").innerText="0";
+
+
+    document.getElementById("hasilCari").innerHTML="";
+
+    document.getElementById("cariBarang").value="";
+
+
 
     alert("✅ Pembayaran berhasil");
 
-document.getElementById("hasilCari").innerHTML = "";
-document.getElementById("cariBarang").value = "";
 
-document.getElementById("cariBarang").focus();
-}
+  };
 
-};
+
+
+});

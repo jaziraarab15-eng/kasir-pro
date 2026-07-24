@@ -1,5 +1,5 @@
 const DB_NAME = "KasirProDB";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "barang";
 
 let db = null;
@@ -13,22 +13,25 @@ export function initDB() {
 
       db = e.target.result;
 
-      if (!db.objectStoreNames.contains(STORE)) {
-
-        db.createObjectStore(STORE, {
+      if (!db.objectStoreNames.contains("barang")) {
+        db.createObjectStore("barang", {
           keyPath: "id",
           autoIncrement: true
         });
+      }
 
+      if (!db.objectStoreNames.contains("transaksi")) {
+        db.createObjectStore("transaksi", {
+          keyPath: "id",
+          autoIncrement: true
+        });
       }
 
     };
 
     request.onsuccess = (e) => {
-
       db = e.target.result;
       resolve();
-
     };
 
     request.onerror = reject;
@@ -36,6 +39,10 @@ export function initDB() {
   });
 }
 
-export function getStore(mode = "readonly") {
-  return db.transaction(STORE, mode).objectStore(STORE);
+export function getStore(mode = "readonly", store = STORE) {
+
+  return db
+    .transaction(store, mode)
+    .objectStore(store);
+
 }

@@ -80,3 +80,32 @@ export function semuaTransaksi(){
   });
 
 }
+
+
+export function updateBarang(data){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readwrite").put(data);
+
+    req.onsuccess = resolve;
+
+    req.onerror = reject;
+
+  });
+
+}
+
+export function hapusBarang(id){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readwrite").delete(id);
+
+    req.onsuccess = resolve;
+
+    req.onerror = reject;
+
+  });
+
+}

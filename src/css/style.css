@@ -190,3 +190,20 @@ transform:scale(.97);
   margin:4px;
   font-size:20px;
 }
+
+#struk{
+  display:none;
+  background:#fff;
+  border-radius:12px;
+  padding:20px;
+  margin-top:15px;
+  text-align:center;
+}
+
+#isiStruk{
+  white-space:pre-wrap;
+  font-family:monospace;
+  font-size:16px;
+  line-height:1.4;
+}
+

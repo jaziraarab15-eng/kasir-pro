@@ -1,14 +1,20 @@
 import './css/style.css';
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import { initDB } from "./js/db.js";
 import {
   tambahBarang,
   semuaBarang,
+  updateBarang,
   updateStok,
   simpanTransaksi,
-  semuaTransaksi
+  semuaTransaksi,
+  hapusBarang
 } from "./js/barang.js";
 
 let keranjang = [];
+let editId = null;
+
+const scanner = new BrowserMultiFormatReader();
 
 document.querySelector("#app").innerHTML = `
 <header class="header">
@@ -70,10 +76,36 @@ Laporan
 Scan
 </div>
 
-<div class="box">
-<span class="material-icons">settings</span>
-Setting
+<div class="box" id="menuBackup">
+<span class="material-icons">backup</span>
+Backup
 </div>
+
+</section>
+
+<section class="card" id="halamanBackup">
+
+<h2>💾 Backup Database</h2>
+
+<p>Backup semua data barang dan transaksi ke file JSON.</p>
+
+<button id="btnBackup">
+
+Backup Sekarang
+
+</button>
+
+<input
+id="fileRestore"
+type="file"
+accept=".json"
+style="display:none">
+
+<button id="btnRestore">
+
+Restore Database
+
+</button>
 
 </section>
 
@@ -121,6 +153,20 @@ placeholder="Cari nama atau barcode">
 
 <div id="hasilCari"></div>
 
+<button id="btnScan">
+📷 Scan Barcode
+</button>
+
+<video
+id="preview"
+style="
+display:none;
+width:100%;
+border-radius:12px;
+margin-top:10px;
+"
+></video>
+
 <h3>Keranjang</h3>
 
 <div id="keranjang">
@@ -141,6 +187,14 @@ Bayar
 </button>
 
 </section>
+
+<div id="struk" style="display:none">
+
+<h3>🧾 STRUK BELANJA</h3>
+
+<pre id="isiStruk"></pre>
+
+</div>
 
 <button id="fab" class="fab">+</button>
 
@@ -167,11 +221,67 @@ async function tampilkanBarang(){
 
     daftar.innerHTML += `
 <div class="box">
+
 <b>${item.nama}</b><br>
+
 Rp ${item.harga}<br>
-Stok : ${item.stok}
+
+Stok : ${item.stok}<br><br>
+
+<button
+class="editBarang"
+data-id="${item.id}">
+✏️ Edit
+</button>
+
+<button
+class="hapusBarang"
+data-id="${item.id}">
+🗑️ Hapus
+</button>
+
 </div>
 `;
+
+  });
+
+  document.querySelectorAll(".editBarang").forEach(btn=>{
+
+    btn.onclick = async()=>{
+
+      const data = await semuaBarang();
+
+      const barang = data.find(
+        x => x.id == btn.dataset.id
+      );
+
+      editId = barang.id;
+
+      document.getElementById("nama").value = barang.nama;
+      document.getElementById("harga").value = barang.harga;
+      document.getElementById("stok").value = barang.stok;
+      document.getElementById("barcode").value = barang.barcode;
+
+      document.getElementById("simpan").innerText =
+      "Update Barang";
+
+    };
+
+  });
+
+  document.querySelectorAll(".hapusBarang").forEach(btn=>{
+
+    btn.onclick = async()=>{
+
+      if(!confirm("Yakin ingin menghapus barang ini?")){
+        return;
+      }
+
+      await hapusBarang(Number(btn.dataset.id));
+
+      await tampilkanBarang();
+
+    };
 
   });
 
@@ -424,6 +534,12 @@ document.getElementById("menuLaporan").onclick = async()=>{
 
 };
 
+document.getElementById("btnBackup").onclick = ()=>{
+
+  backupDatabase();
+
+};
+
 
 // Pencarian barang
 document.getElementById("cariBarang").oninput = (e)=>{
@@ -487,14 +603,31 @@ initDB().then(async()=>{
 
 
 
-    await tambahBarang({
+    if(editId===null){
 
-      nama,
-      harga,
-      stok,
-      barcode
+  await tambahBarang({
+    nama,
+    harga,
+    stok,
+    barcode
+  });
 
-    });
+}else{
+
+  await updateBarang({
+    id: editId,
+    nama,
+    harga,
+    stok,
+    barcode
+  });
+
+  editId = null;
+
+  document.getElementById("simpan").innerText =
+  "Simpan Barang";
+
+}
 
 
 
@@ -608,6 +741,32 @@ initDB().then(async()=>{
     });
 
 
+document.getElementById("isiStruk").innerText =
+`================================
+        KASIR PRO
+       TOKO BAROKAH
+================================
+
+Tanggal :
+${new Date().toLocaleString()}
+
+--------------------------------
+${keranjang.map(item=>
+`${item.nama}
+${item.qty} x Rp ${item.harga}
+= Rp ${item.qty * item.harga}`
+).join("\n\n")}
+
+--------------------------------
+TOTAL      : Rp ${total}
+BAYAR      : Rp ${bayar}
+KEMBALIAN  : Rp ${bayar-total}
+
+================================
+Terima kasih telah berbelanja
+================================`;
+
+document.getElementById("struk").style.display = "block";
 
 
 
@@ -634,13 +793,114 @@ initDB().then(async()=>{
 
     document.getElementById("cariBarang").value="";
 
-
+    document.getElementById("cariBarang").focus();
 
     alert("✅ Pembayaran berhasil");
-
 
   };
 
 
 
 });
+
+document.getElementById("fileRestore").onchange = async(e)=>{
+
+  const file = e.target.files[0];
+
+  if(!file) return;
+
+  const text = await file.text();
+
+  const data = JSON.parse(text);
+
+  console.log(data);
+
+  alert(
+    `Backup ditemukan\n\nBarang : ${data.barang.length}\nTransaksi : ${data.transaksi.length}`
+  );
+
+};
+
+async function backupDatabase(){
+
+alert("Backup dimulai...");
+
+  const barang = await semuaBarang();
+
+  const transaksi = await semuaTransaksi();
+
+  const data = {
+    tanggal: new Date().toISOString(),
+    barang,
+    transaksi
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  a.href = url;
+
+  a.download = "KasirPro-Backup.json";
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+document.getElementById("btnRestore").onclick = ()=>{
+
+  document
+    .getElementById("fileRestore")
+    .click();
+
+};
+
+document.getElementById("btnScan").onclick = async()=>{
+
+  const video = document.getElementById("preview");
+
+  video.style.display = "block";
+
+  try{
+
+const devices =
+  await BrowserMultiFormatReader.listVideoInputDevices();
+
+    await scanner.decodeFromVideoDevice(
+
+      devices[0].deviceId,
+
+      "preview",
+
+      (result)=>{
+
+        if(result){
+
+          alert(result.getText());
+
+          scanner.reset();
+
+          video.style.display = "none";
+
+        }
+
+      }
+
+    );
+
+  }catch(err){
+
+    alert("Kamera tidak bisa dibuka");
+
+    console.error(err);
+
+  }
+
+};

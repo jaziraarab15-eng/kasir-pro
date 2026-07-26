@@ -15,6 +15,7 @@ let keranjang = [];
 let editId = null;
 
 const scanner = new BrowserMultiFormatReader();
+let kameraBelakang = null;
 
 document.querySelector("#app").innerHTML = `
 <header class="header">
@@ -873,9 +874,26 @@ document.getElementById("btnScan").onclick = async()=>{
 const devices =
   await BrowserMultiFormatReader.listVideoInputDevices();
 
+if(!kameraBelakang){
+
+  kameraBelakang =
+    devices.find(d=>{
+
+      const nama = d.label.toLowerCase();
+
+      return (
+        nama.includes("back") ||
+        nama.includes("rear") ||
+        nama.includes("environment")
+      );
+
+    }) || devices[devices.length-1];
+
+}
+
     await scanner.decodeFromVideoDevice(
 
-      devices[0].deviceId,
+    kameraBelakang.deviceId,
 
       "preview",
 

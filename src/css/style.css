@@ -114,13 +114,6 @@ cursor:pointer;
 transform:scale(.95);
 }
 
-.material-icons{
-font-size:clamp(28px,6vw,42px);
-display:block;
-margin-bottom:8px;
-color:#0f766e;
-}
-
 .fab{
 position:fixed;
 right:22px;
@@ -277,10 +270,5 @@ font-size:13px;
 
 }
 
-.material-icons{
-
-font-size:30px;
-
-}
 
 }

@@ -54,32 +54,32 @@ document.querySelector("#app").innerHTML = `
 <section class="grid">
 
 <div class="box" id="menuKasir">
-<span class="material-icons">point_of_sale</span>
+<span class="icon">🛒</span>
 Kasir
 </div>
 
 <div class="box" id="menuBarang">
-<span class="material-icons">inventory_2</span>
+<span class="icon">📦</span>
 Barang
 </div>
 
 <div class="box">
-<span class="material-icons">groups</span>
+<span class="icon">👥</span>
 Pelanggan
 </div>
 
 <div class="box" id="menuLaporan">
-<span class="material-icons">analytics</span>
+<span class="icon">📊</span>
 Laporan
 </div>
 
 <div class="box">
-<span class="material-icons">qr_code_scanner</span>
+<span class="icon">📷</span>
 Scan
 </div>
 
 <div class="box" id="menuBackup">
-<span class="material-icons">backup</span>
+<span class="icon">💾</span>
 Backup
 </div>
 

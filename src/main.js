@@ -16,6 +16,7 @@ let editId = null;
 
 const scanner = new BrowserMultiFormatReader();
 let kameraBelakang = null;
+let sedangScan = false;
 
 document.querySelector("#app").innerHTML = `
 <header class="header">
@@ -167,6 +168,10 @@ border-radius:12px;
 margin-top:10px;
 "
 ></video>
+
+<button id="btnStopScan" style="display:none">
+❌ Tutup Scan
+</button>
 
 <h3>Keranjang</h3>
 
@@ -869,6 +874,8 @@ document.getElementById("btnScan").onclick = async()=>{
 
   video.style.display = "block";
 
+document.getElementById("btnStopScan").style.display = "block";
+
   try{
 
 const devices =
@@ -897,21 +904,79 @@ if(!kameraBelakang){
 
       "preview",
 
-      (result)=>{
+     async (result)=>{
 
-        if(result){
+      if(result && !sedangScan){
 
-          alert(result.getText());
+  sedangScan = true;
 
-          scanner.reset();
+  const barcode = result.getText();
 
-          video.style.display = "none";
+  const data = await semuaBarang();
 
-        }
+  const barang = data.find(
+    b => b.barcode === barcode
+  );
+
+  if(!barang){
+
+    alert("❌ Barang tidak ditemukan");
+
+    return;
+
+  }
+
+  if(barang.stok <= 0){
+
+  alert("❌ Stok barang habis");
+
+  return;
+
+}
+
+  let item = keranjang.find(
+    x => x.id === barang.id
+  );
+
+  if(item){
+
+    item.qty++;
+
+  }else{
+
+    keranjang.push({
+
+      id: barang.id,
+
+      nama: barang.nama,
+
+      harga: barang.harga,
+
+      qty: 1
+
+    });
+
+  }
+
+ tampilkanKeranjang();
+
+setTimeout(()=>{
+
+  sedangScan = false;
+
+},1000);
+
+if(navigator.vibrate){
+
+  navigator.vibrate(100);
+
+}
 
       }
 
-    );
+    }
+
+  );
 
   }catch(err){
 
@@ -920,5 +985,15 @@ if(!kameraBelakang){
     console.error(err);
 
   }
+
+};
+
+document.getElementById("btnStopScan").onclick = ()=>{
+
+  scanner.reset();
+
+  document.getElementById("preview").style.display = "none";
+
+  document.getElementById("btnStopScan").style.display = "none";
 
 };

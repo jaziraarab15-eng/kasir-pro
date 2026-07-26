@@ -205,11 +205,27 @@ Bayar
 <button id="fab" class="fab">+</button>
 
 <nav class="bottom">
-<button><span class="material-icons">home</span></button>
-<button><span class="material-icons">shopping_cart</span></button>
-<button><span class="material-icons">inventory_2</span></button>
-<button><span class="material-icons">bar_chart</span></button>
-<button><span class="material-icons">settings</span></button>
+
+<button id="navHome">
+🏠
+</button>
+
+<button id="navKasir">
+🛒
+</button>
+
+<button id="navBarang">
+📦
+</button>
+
+<button id="navLaporan">
+📊
+</button>
+
+<button id="navSetting">
+⚙️
+</button>
+
 </nav>
 `;
 
@@ -995,5 +1011,39 @@ document.getElementById("btnStopScan").onclick = ()=>{
   document.getElementById("preview").style.display = "none";
 
   document.getElementById("btnStopScan").style.display = "none";
+
+};
+
+// ===== NAVIGASI BAWAH =====
+
+document.getElementById("navHome").onclick = ()=>{
+
+  document.querySelector(".header").scrollIntoView({
+    behavior:"smooth"
+  });
+
+};
+
+document.getElementById("navKasir").onclick = ()=>{
+
+  document.getElementById("menuKasir").click();
+
+};
+
+document.getElementById("navBarang").onclick = ()=>{
+
+  document.getElementById("menuBarang").click();
+
+};
+
+document.getElementById("navLaporan").onclick = ()=>{
+
+  document.getElementById("menuLaporan").click();
+
+};
+
+document.getElementById("navSetting").onclick = ()=>{
+
+  alert("⚙️ Menu Setting akan kita lengkapi pada update berikutnya.");
 
 };

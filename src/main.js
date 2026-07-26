@@ -19,6 +19,9 @@ let kameraBelakang = null;
 let sedangScan = false;
 
 document.querySelector("#app").innerHTML = `
+
+<section id="halamanHome">
+
 <header class="header">
   <h2>👋 Assalamualaikum</h2>
   <h1>Kasir Pro</h1>
@@ -82,6 +85,8 @@ Scan
 <span class="icon">💾</span>
 Backup
 </div>
+
+</section>
 
 </section>
 
@@ -246,6 +251,7 @@ Bayar
 
 </nav>
 `;
+
 
 async function tampilkanBarang(){
 
@@ -1034,39 +1040,64 @@ document.getElementById("btnStopScan").onclick = ()=>{
 
 // ===== NAVIGASI BAWAH =====
 
+function sembunyikanSemuaHalaman(){
+
+  document.getElementById("halamanHome").style.display = "none";
+
+  document.getElementById("halamanBarang").style.display = "none";
+
+  document.getElementById("halamanKasir").style.display = "none";
+
+  document.getElementById("halamanLaporan").style.display = "none";
+
+  document.getElementById("halamanBackup").style.display = "none";
+
+  document.getElementById("halamanSetting").style.display = "none";
+
+}
+
+function bukaHalaman(id){
+
+  sembunyikanSemuaHalaman();
+
+  document.querySelector(".header").style.display = "none";
+
+  document.getElementById(id).style.display = "block";
+
+}
+
 document.getElementById("navHome").onclick = ()=>{
 
-  document.querySelector(".header").scrollIntoView({
-    behavior:"smooth"
-  });
+bukaHalaman("halamanHome");
+
+  document.querySelector(".header").style.display="block";
 
 };
 
 document.getElementById("navKasir").onclick = ()=>{
 
-  document.getElementById("menuKasir").click();
+  bukaHalaman("halamanKasir");
 
 };
 
 document.getElementById("navBarang").onclick = ()=>{
 
-  document.getElementById("menuBarang").click();
+  bukaHalaman("halamanBarang");
 
 };
 
 document.getElementById("navLaporan").onclick = ()=>{
 
-  document.getElementById("menuLaporan").click();
+bukaHalaman("halamanLaporan");
 
 };
 
 document.getElementById("navSetting").onclick = ()=>{
 
-  document
-    .getElementById("halamanSetting")
-    .scrollIntoView({
-      behavior:"smooth"
-    });
+bukaHalaman("halamanSetting");
 
 };
 
+// ===== HALAMAN PERTAMA =====
+
+bukaHalaman("halamanHome");

@@ -111,6 +111,24 @@ Restore Database
 
 </section>
 
+<section class="card" id="halamanSetting">
+
+<h2>⚙️ Pengaturan</h2>
+
+<div class="box">🏪 Profil Toko</div>
+
+<div class="box">🖨️ Printer Bluetooth</div>
+
+<div class="box">🌙 Mode Gelap</div>
+
+<div class="box">💾 Backup Database</div>
+
+<div class="box">📂 Restore Database</div>
+
+<div class="box">ℹ️ Tentang Aplikasi</div>
+
+</section>
+
 <section class="card" id="halamanLaporan">
 
 <h2>📊 Laporan Penjualan</h2>
@@ -1044,6 +1062,11 @@ document.getElementById("navLaporan").onclick = ()=>{
 
 document.getElementById("navSetting").onclick = ()=>{
 
-  alert("⚙️ Menu Setting akan kita lengkapi pada update berikutnya.");
+  document
+    .getElementById("halamanSetting")
+    .scrollIntoView({
+      behavior:"smooth"
+    });
 
 };
+

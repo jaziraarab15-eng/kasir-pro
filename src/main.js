@@ -808,6 +808,8 @@ initDB().then(async()=>{
 
   await tampilkanRiwayat();
 
+  await konekPrinterTerakhir();
+
   // Simpan Barang
 
   document.getElementById("simpan").onclick = async()=>{
@@ -1426,31 +1428,60 @@ async function tampilkanPelanggan(){
 
 }
 
-async function hubungkanPrinter(){
+async function hubungkanPrinter() {
 
-try{
+  try {
 
-const namaPrinter = prompt(
-"Masukkan nama printer Bluetooth:"
-);
+    const hasil = await BluetoothPrinter.listPrinters();
 
-if(!namaPrinter) return;
+    const daftar = hasil.printers;
 
+    if (!daftar || daftar.length === 0) {
+      alert("❌ Tidak ada printer Bluetooth yang sudah dipasangkan.");
+      return;
+    }
 
-const hasil = await BluetoothPrinter.connect({
+    const namaPrinter = prompt(
+      "Pilih printer:\n\n" + daftar.join("\n")
+    );
 
-printer:namaPrinter
+    if (!namaPrinter) return;
 
-});
+    await BluetoothPrinter.connect({
+      printer: namaPrinter
+    });
 
+    localStorage.setItem("printerBluetooth", namaPrinter);
 
-alert("✅ Printer terhubung");
+    alert("✅ Printer terhubung");
 
-}catch(err){
+  } catch (err) {
 
-alert("❌ "+err.message);
+    alert("❌ " + err.message);
+
+  }
 
 }
+
+async function konekPrinterTerakhir() {
+
+  const namaPrinter = localStorage.getItem("printerBluetooth");
+
+  if (!namaPrinter) return;
+
+  try {
+
+    await BluetoothPrinter.connect({
+      printer: namaPrinter
+    });
+
+    console.log("Printer otomatis terhubung:", namaPrinter);
+
+  } catch (e) {
+
+    console.log("Gagal konek otomatis:", e.message);
+
+  }
 
 }
 

@@ -153,14 +153,15 @@ public void listPrinters(PluginCall call) {
 
     JSObject result = new JSObject();
 
-    StringBuilder daftar = new StringBuilder();
+    org.json.JSONArray printers = new org.json.JSONArray();
 
     for (BluetoothDevice device : devices) {
-        daftar.append(device.getName()).append("\n");
+        printers.put(device.getName());
     }
 
-    result.put("printers", daftar.toString());
+    result.put("printers", printers);
 
     call.resolve(result);
-  }
+ }
+
 }

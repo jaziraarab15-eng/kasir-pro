@@ -109,3 +109,32 @@ export function hapusBarang(id){
   });
 
 }
+
+export function simpanPelanggan(data){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readwrite","pelanggan").add(data);
+
+    req.onsuccess = resolve;
+
+    req.onerror = reject;
+
+  });
+
+}
+
+export function semuaPelanggan(){
+
+  return new Promise((resolve,reject)=>{
+
+    const req = getStore("readonly","pelanggan").getAll();
+
+    req.onsuccess = ()=>resolve(req.result);
+
+    req.onerror = reject;
+
+  });
+
+}
+

@@ -1,5 +1,5 @@
 const DB_NAME = "KasirProDB";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = "barang";
 
 let db = null;
@@ -27,6 +27,13 @@ export function initDB() {
         });
       }
 
+      if (!db.objectStoreNames.contains("pelanggan")) {
+  db.createObjectStore("pelanggan", {
+    keyPath: "id",
+    autoIncrement: true
+  });
+}
+
     };
 
     request.onsuccess = (e) => {
@@ -46,3 +53,4 @@ export function getStore(mode = "readonly", store = STORE) {
     .objectStore(store);
 
 }
+

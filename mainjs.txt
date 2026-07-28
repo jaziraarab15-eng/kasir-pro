@@ -1,6 +1,5 @@
 import './css/style.css';
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import BluetoothPrinter from "./js/BluetoothPrinter.js";
 import { initDB } from "./js/db.js";
 import {
   tambahBarang,
@@ -125,14 +124,7 @@ Restore Database
 
 <div class="box">🏪 Profil Toko</div>
 
-<div class="box">
-  🖨️ Printer Bluetooth
-  <br><br>
-
-  <button id="btnHubungkanPrinter">
-    🖨 Hubungkan Printer
-  </button>
-</div>
+<div class="box">🖨️ Printer Bluetooth</div>
 
 <div class="box">🌙 Mode Gelap</div>
 
@@ -156,26 +148,6 @@ Rp <span id="totalOmzet">0</span></p>
 
 <div id="daftarTransaksi">
 Belum ada transaksi
-</div>
-
-</section>
-
-<section class="card" id="halamanRiwayat" style="display:none">
-
-<h2>🧾 Riwayat Transaksi</h2>
-
-<button id="btnKembaliRiwayat" style="display:none;margin-bottom:10px;">
-⬅ Kembali
-</button>
-
-<div id="daftarRiwayat"></div>
-
-<div id="detailRiwayat" style="display:none;margin-top:20px;">
-
-  <h3>🧾 Detail Struk</h3>
-
-  <pre id="isiDetailRiwayat"></pre>
-
 </div>
 
 </section>
@@ -220,12 +192,6 @@ Simpan Barang
 <section class="card" id="halamanKasir">
 
 <h2>🛒 Kasir</h2>
-
-<label><b>👤 Pelanggan</b></label>
-
-<select id="pilihPelanggan">
-  <option value="">-- Pelanggan Umum --</option>
-</select>
 
 <input id="cariBarang"
 placeholder="Cari nama atau barcode">
@@ -297,12 +263,6 @@ Bayar
 
 <button id="navLaporan">
 📊
-</button>
-
-<button id="navRiwayat">
-🧾
-<br>
-Riwayat
 </button>
 
 <button id="navSetting">
@@ -572,8 +532,6 @@ async function tampilkanLaporan(){
 
 <b>${new Date(trx.tanggal).toLocaleString()}</b><br>
 
-<p><b>👤 Pelanggan:</b> ${trx.pelanggan || "Umum"}</p>
-
 Total : Rp ${trx.total}<br>
 
 Bayar : Rp ${trx.bayar}<br>
@@ -588,97 +546,6 @@ Kembali : Rp ${trx.kembali}
   document.getElementById("totalOmzet").innerText = omzet;
   document.getElementById("statPenjualan").innerText = "Rp " + omzet;
   document.getElementById("statTransaksi").innerText = data.length;
-
-}
-
-async function tampilkanRiwayat(){
-
-  const data = await semuaTransaksi();
-
-  const daftar = document.getElementById("daftarRiwayat");
-
-  daftar.innerHTML = "";
-
-  if(data.length===0){
-
-    daftar.innerHTML = "<p>Belum ada transaksi.</p>";
-
-    return;
-
-  }
-
-  const riwayat = [...data].reverse();
-
-  riwayat.forEach((trx,index)=>{
-
-    const box = document.createElement("div");
-
-    box.className = "box";
-
-    box.innerHTML = `
-      <b>📅 ${new Date(trx.tanggal).toLocaleString()}</b><br>
-      👤 ${trx.pelanggan || "Umum"}<br>
-      💰 Total : Rp ${trx.total}<br>
-      🛒 ${trx.items.length} Barang
-    `;
-
-    box.onclick = ()=>{
-
-      lihatDetailRiwayat(riwayat[index]);
-
-    };
-
-    daftar.appendChild(box);
-
-  });
-
-}
-
-function lihatDetailRiwayat(trx){
-
- document.getElementById("daftarRiwayat").style.display = "none";
-
-document.getElementById("btnKembaliRiwayat").style.display = "block";
-
-document.getElementById("detailRiwayat").style.display = "block";
-
-  document.getElementById("isiDetailRiwayat").innerText =
-`================================
-        KASIR PRO
-       TOKO BAROKAH
-================================
-
-Tanggal :
-${new Date(trx.tanggal).toLocaleString()}
-
-Pelanggan :
-${trx.pelanggan || "Umum"}
-
---------------------------------
-${trx.items.map(item=>
-`${item.nama}
-${item.qty} x Rp ${item.harga}
-= Rp ${item.qty * item.harga}`
-).join("\n\n")}
-
---------------------------------
-TOTAL      : Rp ${trx.total}
-BAYAR      : Rp ${trx.bayar}
-KEMBALIAN  : Rp ${trx.kembali}
-
-================================
-Terima kasih telah berbelanja
-================================`;
-
- document.getElementById("btnKembaliRiwayat").onclick = ()=>{
-
-  document.getElementById("daftarRiwayat").style.display = "block";
-
-  document.getElementById("detailRiwayat").style.display = "none";
-
-  document.getElementById("btnKembaliRiwayat").style.display = "none";
-
-};
 
 }
 
@@ -804,11 +671,9 @@ initDB().then(async()=>{
 
   await tampilkanPelanggan();
 
-  await isiPilihanPelanggan();
-
   await tampilkanLaporan();
 
-  await tampilkanRiwayat();
+
 
   // Simpan Barang
 
@@ -879,10 +744,7 @@ initDB().then(async()=>{
 
   document.getElementById("btnBayar").onclick = async()=>{
 
-     alert("Bayar diklik");
 
-     try{
- 
     if(keranjang.length===0){
 
       alert("Keranjang masih kosong!");
@@ -956,28 +818,24 @@ initDB().then(async()=>{
     }
 
 
-const pelanggan =
-document.getElementById("pilihPelanggan").value || "Umum";
+
 
     await simpanTransaksi({
 
-  tanggal:new Date().toISOString(),
+      tanggal:new Date().toISOString(),
 
-  pelanggan,
+      items:[...keranjang],
 
-  items:[...keranjang],
+      total,
 
-  total,
+      bayar,
 
-  bayar,
+      kembali: bayar-total
 
-  kembali: bayar-total
-
-});
+    });
 
 
 document.getElementById("isiStruk").innerText =
-
 `================================
         KASIR PRO
        TOKO BAROKAH
@@ -985,9 +843,6 @@ document.getElementById("isiStruk").innerText =
 
 Tanggal :
 ${new Date().toLocaleString()}
-
-Pelanggan :
-${pelanggan}
 
 --------------------------------
 ${keranjang.map(item=>
@@ -1007,20 +862,7 @@ Terima kasih telah berbelanja
 
 document.getElementById("struk").style.display = "block";
 
-const isiStruk =
-document.getElementById("struk").innerText;
 
-try{
-
-  await BluetoothPrinter.print({
-    text: isiStruk
-  });
-
-}catch(err){
-
-  console.log(err);
-
-}
 
     keranjang=[];
 
@@ -1034,7 +876,6 @@ try{
 
     await tampilkanLaporan();
 
-    await tampilkanRiwayat();
 
 
     document.getElementById("uangBayar").value="";
@@ -1049,15 +890,6 @@ try{
     document.getElementById("cariBarang").focus();
 
     alert("✅ Pembayaran berhasil");
-
-}catch(err){
-
-  alert(err);
-
-  console.error(err);
-
-}
-
 
   };
 
@@ -1281,22 +1113,10 @@ document.getElementById("simpanPelanggan").onclick = async()=>{
 
   }
 
-try{
-
   await simpanPelanggan({
     nama,
     hp
   });
-
-  alert("Data berhasil disimpan");
-
-}catch(err){
-
-  alert(err);
-
-  console.error(err);
-
-}
 
   document.getElementById("namaPelanggan").value = "";
 
@@ -1319,8 +1139,6 @@ function sembunyikanSemuaHalaman(){
   document.getElementById("halamanKasir").style.display = "none";
 
   document.getElementById("halamanLaporan").style.display = "none";
-
-  document.getElementById("halamanRiwayat").style.display = "none";
 
   document.getElementById("halamanBackup").style.display = "none";
 
@@ -1376,18 +1194,6 @@ document.getElementById("navLaporan").onclick = ()=>{
 
 };
 
-document.getElementById("navRiwayat").onclick = ()=>{
-
-  bukaHalaman("halamanRiwayat");
-
-  tampilkanRiwayat();
-
-  document
-    .getElementById("navRiwayat")
-    .classList.add("active");
-
-};
-
 document.getElementById("navSetting").onclick = ()=>{
 
   bukaHalaman("halamanSetting");
@@ -1396,9 +1202,6 @@ document.getElementById("navSetting").onclick = ()=>{
     .classList.add("active");
 
 };
-
-document.getElementById("btnHubungkanPrinter").onclick =
-hubungkanPrinter;
 
 // ===== HALAMAN PERTAMA =====
 
@@ -1423,60 +1226,6 @@ async function tampilkanPelanggan(){
         📞 ${p.hp}
       </div>
     `;
-
-  });
-
-}
-
-async function hubungkanPrinter(){
-
-  try{
-
-    const daftar = await BluetoothPrinter.listPrinters();
-
-    if(!daftar.printers){
-
-      alert("Belum ada printer Bluetooth yang dipasangkan.");
-
-      return;
-
-    }
-
-    const namaPrinter = prompt(
-      "Printer tersedia:\n\n" +
-      daftar.printers +
-      "\nMasukkan salah satu nama printer:"
-    );
-
-    if(!namaPrinter) return;
-
-    const hasil = await BluetoothPrinter.connect({
-      printer: namaPrinter
-    });
-
-    alert("✅ " + hasil.status);
-
-  }catch(err){
-
-    alert("❌ " + err.message);
-
-  }
-
-}
-
-async function isiPilihanPelanggan(){
-
-  const data = await semuaPelanggan();
-
-  const pilih = document.getElementById("pilihPelanggan");
-
-  pilih.innerHTML =
-  `<option value="">-- Pelanggan Umum --</option>`;
-
-  data.forEach(p=>{
-
-    pilih.innerHTML +=
-    `<option value="${p.nama}">${p.nama}</option>`;
 
   });
 

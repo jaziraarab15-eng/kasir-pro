@@ -1,6 +1,6 @@
 import './css/style.css';
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import BluetoothPrinter from "./js/BluetoothPrinter.js";
+import BluetoothPrinter from "./plugins/BluetoothPrinter.js";
 import { initDB } from "./js/db.js";
 import {
   tambahBarang,
@@ -125,9 +125,7 @@ Restore Database
 
 <div class="box">🏪 Profil Toko</div>
 
-<div class="box">
-  🖨️ Printer Bluetooth
-  <br><br>
+<div class="box">🖨️ Printer Bluetooth</div>
 
   <button id="btnHubungkanPrinter">
     🖨 Hubungkan Printer
@@ -1430,37 +1428,29 @@ async function tampilkanPelanggan(){
 
 async function hubungkanPrinter(){
 
-  try{
+try{
 
-    const daftar = await BluetoothPrinter.listPrinters();
+const namaPrinter = prompt(
+"Masukkan nama printer Bluetooth:"
+);
 
-    if(!daftar.printers){
+if(!namaPrinter) return;
 
-      alert("Belum ada printer Bluetooth yang dipasangkan.");
 
-      return;
+const hasil = await BluetoothPrinter.connect({
 
-    }
+printer:namaPrinter
 
-    const namaPrinter = prompt(
-      "Printer tersedia:\n\n" +
-      daftar.printers +
-      "\nMasukkan salah satu nama printer:"
-    );
+});
 
-    if(!namaPrinter) return;
 
-    const hasil = await BluetoothPrinter.connect({
-      printer: namaPrinter
-    });
+alert("✅ Printer terhubung");
 
-    alert("✅ " + hasil.status);
+}catch(err){
 
-  }catch(err){
+alert("❌ "+err.message);
 
-    alert("❌ " + err.message);
-
-  }
+}
 
 }
 

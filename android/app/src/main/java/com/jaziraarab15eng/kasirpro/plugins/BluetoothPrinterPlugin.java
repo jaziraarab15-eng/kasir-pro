@@ -138,7 +138,6 @@ public class BluetoothPrinterPlugin extends Plugin {
         }
 
     }
-}
 
 @PluginMethod
 public void listPrinters(PluginCall call) {
@@ -163,4 +162,5 @@ public void listPrinters(PluginCall call) {
     result.put("printers", daftar.toString());
 
     call.resolve(result);
+  }
 }
